@@ -13,6 +13,18 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
+def ingest():
+    # Connect to Cassandra
+    cluster, session = connect_cassandra()
+    # Execute CQL scripts
+    execute_cql_scripts(session, config['CQL']['SCHEMA'])
+    # Ingest data
+    games_df = pd.read_csv(config['DATA']['GAMES_CSV'])
+    # ingest_game_stats(session, games_df)
+   # ingest_seasonal_performance(session, games_df)
+
+    return cluster, session
+
 def connect_cassandra():
     cluster = Cluster([config['CASSANDRA']['HOST']], port=config['CASSANDRA']['PORT'])
     session = cluster.connect()
@@ -60,7 +72,7 @@ def ingest_game_stats(session, games_df):
             row['GAME_ID'],
             row['HOME_TEAM_ID'],
             row['VISITOR_TEAM_ID'],
-            row['SEASON'],
+            int(row['SEASON']),
             "Home",
             int(row['PTS_home']),
             int(row['PTS_away']),
@@ -76,7 +88,7 @@ def ingest_game_stats(session, games_df):
             row['GAME_ID'],
             row['VISITOR_TEAM_ID'],
             row['HOME_TEAM_ID'],
-            row['SEASON'],
+            int(row['SEASON']),
             "Away",
             int(row['PTS_away']),
             int(row['PTS_home']),
@@ -129,7 +141,7 @@ def ingest_seasonal_performance(session, games_df):
         ) VALUES (?, ?, ?, ?, ?)
     """)
 
-    for index, row in seasonal_averages.iterrows():
+    for _, row in seasonal_averages.iterrows():
         session.execute(prepared, (
             int(row['team_id']),
             int(row['SEASON']),
@@ -139,12 +151,3 @@ def ingest_seasonal_performance(session, games_df):
         ))
     
     logging.info('Finished ingesting seasonal performance')
-
-
-if __name__ == "__main__":
-    cluster, session  = connect_cassandra()
-    
-    execute_cql_scripts(session, config['CQL']['SCHEMA'])
-    games_df = pd.read_csv(config['DATA']['GAMES_CSV'])
-    ingest_game_stats(session, games_df)
-    ingest_seasonal_performance(session, games_df)
