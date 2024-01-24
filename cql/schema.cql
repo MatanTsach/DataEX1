@@ -31,3 +31,12 @@ CREATE TABLE IF NOT EXISTS game_outcome_performance (
     fg3_pct double,
     PRIMARY KEY ((season, outcome), team_id)
 );
+CREATE TABLE IF NOT EXISTS player_stats (
+    player_name text,
+    reb int,
+    pts int,
+    ast int,
+    PRIMARY KEY (player_name)
+);
+
+
