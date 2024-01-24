@@ -36,3 +36,13 @@ CREATE TABLE IF NOT EXISTS home_away_performance (
     avg_assists double,
     PRIMARY KEY ((team_id), season, game_type)
 );
+
+CREATE TABLE IF NOT EXISTS player_stats (
+    player_name text,
+    reb int,
+    pts int,
+    ast int,
+    PRIMARY KEY (player_name)
+);
+
+
