@@ -21,15 +21,15 @@ def ingest():
     execute_cql_scripts(session, config['CQL']['SCHEMA'])
     # Ingest data
     games_df = pd.read_csv(config['DATA']['GAMES_CSV'])
-    teams_df = pd.read_csv(config['DATA']['TEAMS_CSV'])
-    # ingest_game_stats(session, games_df)
-   # ingest_seasonal_performance(session, games_df)
-    ingest_team_map(session, teams_df)
-    #games_df = pd.read_csv(config['DATA']['GAMES_CSV'])
     player_details_df = pd.read_csv(config['DATA']['GAMES_DETAILS_CSV'])
-    
+    #teams_df = pd.read_csv(config['DATA']['TEAMS_CSV'])
     #ingest_game_stats(session, games_df)
     #ingest_seasonal_performance(session, games_df)
+    #ingest_team_map(session, teams_df)
+    #games_df = pd.read_csv(config['DATA']['GAMES_CSV'])
+    
+    #ingest_seasonal_performance(session, games_df)
+    ingest_game_stats(session, games_df)
     ingest_player_stats(session, player_details_df)
 
     return cluster, session
@@ -185,6 +185,7 @@ def ingest_player_stats(session, player_details_df):
         player = str(row['PLAYER_NAME'])
         
         # Check for NaN values and handle them
+        game_id = int(row['GAME_ID']) if not pd.isna(row['GAME_ID']) else None
         reb = int(row['REB']) if not pd.isna(row['REB']) else None
         pts = int(row['PTS']) if not pd.isna(row['PTS']) else None
         ast = int(row['AST']) if not pd.isna(row['AST']) else None
@@ -196,11 +197,12 @@ def ingest_player_stats(session, player_details_df):
         session.execute("""
             INSERT INTO player_stats (
                 player_name,
+                game_id,
                 reb,
                 pts,
                 ast
-            ) VALUES (%s, %s, %s, %s)
-        """, (player, reb, pts, ast))
+            ) VALUES (%s, %s, %s, %s, %s)
+        """, (player, game_id, reb, pts, ast))
 
     logging.info('Finished ingesting player stats')
 
