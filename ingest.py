@@ -16,20 +16,35 @@ logger = logging.getLogger(__name__)
 def ingest():
     # Connect to Cassandra
     cluster, session = connect_cassandra()
+    print('Connected to Cassandra')
     # Execute CQL scripts
     execute_cql_scripts(session, config['CQL']['SCHEMA'])
     # Ingest data
-    games_df = pd.read_csv(config['DATA']['GAMES_CSV'])
-    # ingest_game_stats(session, games_df)
-   # ingest_seasonal_performance(session, games_df)
+    #games_df = pd.read_csv(config['DATA']['GAMES_CSV'])
+    player_details_df = pd.read_csv(config['DATA']['GAMES_DETAILS_CSV'])
+    
+    #ingest_game_stats(session, games_df)
+    #ingest_seasonal_performance(session, games_df)
+    ingest_player_stats(session, player_details_df)
 
     return cluster, session
 
 def connect_cassandra():
-    cluster = Cluster([config['CASSANDRA']['HOST']], port=config['CASSANDRA']['PORT'])
+    cluster = Cluster([config['CASSANDRA']['HOST']], port=int(config['CASSANDRA']['PORT']))
     session = cluster.connect()
+
+    # Create keyspace if it doesn't exist
+    create_keyspace_query = f"""
+        CREATE KEYSPACE IF NOT EXISTS {config['CASSANDRA']['KEYSPACE']}
+        WITH replication = {{'class': 'SimpleStrategy', 'replication_factor': 1}}
+        AND durable_writes = true;
+    """
+    print(f"Executing keyspace creation query:\n{create_keyspace_query}")
+    session.execute(create_keyspace_query)
+
     session.set_keyspace(config['CASSANDRA']['KEYSPACE'])
     return cluster, session
+
 
 def execute_cql_scripts(session, cql_script):
     """Execute CQL commands from a .cql file."""
@@ -40,7 +55,6 @@ def execute_cql_scripts(session, cql_script):
             if command:
                 logger.info(f"Executing CQL command:\n{command}")
                 session.execute(command)
-
 
 def ingest_game_stats(session, games_df):
     logging.info('Starting to ingest game stats')
@@ -151,3 +165,37 @@ def ingest_seasonal_performance(session, games_df):
         ))
     
     logging.info('Finished ingesting seasonal performance')
+
+def ingest_player_stats(session, player_details_df):
+    logging.info('Starting to ingest player stats')
+    
+    # Select the first 10,000 rows
+    selected_rows = player_details_df.head(10000)
+
+    for _, row in selected_rows.iterrows():
+        player = str(row['PLAYER_NAME'])
+        
+        # Check for NaN values and handle them
+        reb = int(row['REB']) if not pd.isna(row['REB']) else None
+        pts = int(row['PTS']) if not pd.isna(row['PTS']) else None
+        ast = int(row['AST']) if not pd.isna(row['AST']) else None
+
+        # Skip the row if any of the essential values are NaN
+        if pd.isna(reb) or pd.isna(pts) or pd.isna(ast) or pd.isna(player):
+            continue
+
+        session.execute("""
+            INSERT INTO player_stats (
+                player_name,
+                reb,
+                pts,
+                ast
+            ) VALUES (%s, %s, %s, %s)
+        """, (player, reb, pts, ast))
+
+    logging.info('Finished ingesting player stats')
+
+
+
+
+ingest()
