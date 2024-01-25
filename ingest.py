@@ -156,9 +156,10 @@ def ingest_player_stats(session, player_details_df):
         player = str(row["PLAYER_NAME"])
 
         # Check for NaN values and handle them
-        reb = int(row["REB"]) if not pd.isna(row["REB"]) else None
-        pts = int(row["PTS"]) if not pd.isna(row["PTS"]) else None
-        ast = int(row["AST"]) if not pd.isna(row["AST"]) else None
+        game_id = int(row['GAME_ID']) if not pd.isna(row['GAME_ID']) else None
+        reb = int(row['REB']) if not pd.isna(row['REB']) else None
+        pts = int(row['PTS']) if not pd.isna(row['PTS']) else None
+        ast = int(row['AST']) if not pd.isna(row['AST']) else None
 
         # Skip the row if any of the essential values are NaN
         if pd.isna(reb) or pd.isna(pts) or pd.isna(ast) or pd.isna(player):
@@ -168,13 +169,12 @@ def ingest_player_stats(session, player_details_df):
             """
             INSERT INTO player_stats (
                 player_name,
+                game_id,
                 reb,
                 pts,
                 ast
-            ) VALUES (%s, %s, %s, %s)
-        """,
-            (player, reb, pts, ast),
-        )
+            ) VALUES (%s, %s, %s, %s, %s)
+        """, (player, game_id, reb, pts, ast))
 
     logging.info("Finished ingesting player stats")
 
