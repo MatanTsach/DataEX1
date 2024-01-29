@@ -2,6 +2,7 @@ CREATE KEYSPACE IF NOT EXISTS nba_data
 WITH replication = {'class': 'SimpleStrategy', 'replication_factor': 1}
 AND durable_writes = true;
 
+USE nba_data;
 
 CREATE TABLE IF NOT EXISTS teams_map (
     team_id bigint,
@@ -33,26 +34,10 @@ CREATE TABLE IF NOT EXISTS game_outcome_performance (
 );
 CREATE TABLE IF NOT EXISTS player_stats (
     player_name text,
-    game_id int,
-    reb int,
-    pts int,
-    ast int,
-    PRIMARY KEY (player_name)
-);
-
-CREATE TABLE IF NOT EXISTS game_stats_outcome (
-    game_id int,
-    team_id bigint,
-    opponent_team_id bigint,
     season int,
-    game_type text,
-    team_points int,
-    opponent_points int,
-    team_ast int,
-    team_reb int,
-    team_fg_pct double,
-    team_fg3_pct double,
-    game_outcome text,
-    PRIMARY KEY ((game_id), game_outcome)
+    games_played int,
+    pts double,
+    reb double,
+    ast double,
+    PRIMARY KEY ((player_name), season)
 );
-
