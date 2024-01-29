@@ -29,18 +29,15 @@ class Analysis:
 
         # Grouping by season
         df = df.groupby('season').mean().reset_index()
-        # Sorting by season
-        df_sorted = df.sort_values(by='season', ascending=True)
-        print(df_sorted.head())
 
         # Create a bar graph
         bar_color = 'black'
         plt.figure(figsize=(10, 6))
-        bars = plt.bar(df_sorted['season'], df_sorted['avg_points'], color=bar_color)
+        bars = plt.bar(df['season'], df['avg_points'], color=bar_color)
         plt.xlabel('Season')
         plt.ylabel('Average Points')
         plt.title(f'Average Points per Season from 2003 to 2022')
-        plt.xticks(df_sorted['season'], rotation=45)  # Rotate x-axis labels for readability
+        plt.xticks(df['season'], rotation=45)  # Rotate x-axis labels for readability
         plt.bar_label(bars, fmt='%d', label_type='edge', fontsize=9)
         plt.tight_layout()
         plt.show()
@@ -123,9 +120,6 @@ class Analysis:
         # Converting to dataframe
         df = pd.DataFrame(list(results))
 
-        # Ensure the DataFrame is sorted by season
-        df_sorted = df.sort_values(by='season', ascending=True)
-
         # Set figure size
         plt.figure(figsize=(12, 6))
 
@@ -133,14 +127,14 @@ class Analysis:
         bar_width = 0.25
 
         # Set position of bar on X axis
-        r1 = range(len(df_sorted))
+        r1 = range(len(df))
         r2 = [x + bar_width for x in r1]
         r3 = [x + bar_width for x in r2]
 
         # Make the plot
-        bar1 = plt.bar(r1, df_sorted['ast'], color='g', width=bar_width, edgecolor='grey', label='Avg Assists')
-        bar2 = plt.bar(r2, df_sorted['reb'], color='r', width=bar_width, edgecolor='grey', label='Avg Rebounds')
-        bar3 = plt.bar(r3, df_sorted['pts'], color='b', width=bar_width, edgecolor='grey', label='Avg Points')
+        bar1 = plt.bar(r1, df['ast'], color='g', width=bar_width, edgecolor='grey', label='Avg Assists')
+        bar2 = plt.bar(r2, df['reb'], color='r', width=bar_width, edgecolor='grey', label='Avg Rebounds')
+        bar3 = plt.bar(r3, df['pts'], color='b', width=bar_width, edgecolor='grey', label='Avg Points')
         
         plt.bar_label(bar1, padding=3, fmt='%.1f')
         plt.bar_label(bar2, padding=3, fmt='%.1f')
@@ -149,7 +143,7 @@ class Analysis:
         # Add labels to the bars
         plt.xlabel('Season', fontweight='bold')
         plt.ylabel('Averages', fontweight='bold')
-        plt.xticks([r + bar_width for r in range(len(df_sorted))], df_sorted['season'])
+        plt.xticks([r + bar_width for r in range(len(df))], df['season'])
 
         # Create legend & Show graphic
         plt.title(f'Average Points, Rebounds, and Assists per Season for {player_name}')
